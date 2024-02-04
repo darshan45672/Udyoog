@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -11,24 +13,19 @@ class AuthController extends Controller
         return view('front.auth.register');
     }
 
-    public function processRegistration( Request $request){
-        $validator = Validator::make($request->all(),[
-            'name' => 'required',
-            'email' => 'required | email',
-            'password' => 'min:8 | required | same:confirm_password',
-            'confirm_password' => 'required ',
+    public function store(){
+        $validated = request()->validate([
+            'name' => 'required|min:3|max:40',
+            'email' => 'required|email|unique:users,email',
+            'password' =>  'required|confirmed|min:8'
         ]);
 
-        if ($validator ->passes()) {
-            # code...
-        }else{
-            return response()->json([
-                'status' => false,
-                'errors' => $validator->errors()
-            ]);
-        }
-    }
-    public function login(){
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
 
+        return redirect()->route('home');
     }
 }
